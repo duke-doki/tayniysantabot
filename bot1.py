@@ -21,7 +21,7 @@ messages = Message.objects.all()
 
 
 # организатор
-def create_group():
+def create_group(organizer):
 
     # окно <Message: Интро организатору>
     print(messages.get(name='Интро организатору').text)
@@ -84,6 +84,10 @@ def create_group():
     print(messages.get(name='Подтверждение создания группы').text)
     # выводится 'Отлично, Тайный Санта уже готовится к раздаче подарков!
     # (Ссылка)'
+
+    # добавим в группу организатора
+    new_party.players.add(organizer)
+
     new_party.save()
 
 
@@ -142,6 +146,7 @@ def register_in_group(player, group):
     # выводится 'Превосходно, ты в игре! 31.12.2021 мы проведем жеребьевку и
     # ты узнаешь имя и контакты своего тайного друга. Ему и нужно будет
     # подарить подарок!'
+    group_here.players.add(player)
 
     # здесь уже нужен функционал с выбором победителя
 
@@ -162,7 +167,7 @@ if user_type == 'Organizer':
         prompt='Введите свой чат id (бот возьмет автоматически потом) \n'
     )
     organizer = Person.objects.create(chat_id=chat_id, is_organizer=True)
-    create_group()
+    create_group(organizer)
 else:
     # а здесь создаем персону с галочкой is_player=True и потом уже добавляем
     # в нее остальные данные
