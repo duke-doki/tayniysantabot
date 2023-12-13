@@ -174,7 +174,9 @@ else:
     chat_id = pyip.inputNum(
         prompt='Введите свой чат id (бот возьмет автоматически потом) \n'
     )
-    player, is_found = Person.objects.get_or_create(chat_id=chat_id, is_player=True)
+    player, is_found = Person.objects.get_or_create(chat_id=chat_id)
+    player.is_player = True
+    player.save()
     group = pyip.inputStr(
         prompt='Введите название группы (бот потом по ссылке определит) \n'
     )
