@@ -20,6 +20,7 @@ class Person(models.Model):
     )
     address = models.CharField(
         'адрес персоны',
+        max_length=100,
         null=True,
         blank=True
     )
@@ -43,6 +44,9 @@ class Person(models.Model):
         null=True,
         blank=True
     )
+
+    def __str__(self):
+        return self.name
 
 
 class Party(models.Model):
@@ -73,6 +77,9 @@ class Party(models.Model):
         blank=True
     )
 
+    def __str__(self):
+        return self.name
+
 
 class Message(models.Model):
     name = models.CharField(
@@ -84,6 +91,9 @@ class Message(models.Model):
         null=True,
         blank=True
     )
+
+    def __str__(self):
+        return self.name
 
 
 class Answer(models.Model):
@@ -103,3 +113,6 @@ class Answer(models.Model):
         on_delete=models.CASCADE,
         related_name='answers'
     )
+
+    def __str__(self):
+        return f'Ответ {self.pk}'
