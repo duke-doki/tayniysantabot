@@ -4,7 +4,9 @@ from django.db import models
 class Person(models.Model):
     name = models.CharField(
         'имя персоны',
-        max_length=200
+        max_length=200,
+        null=True,
+        blank=True
     )
     phonenumber = models.CharField(
         'номер персоны',
@@ -45,14 +47,16 @@ class Person(models.Model):
         blank=True
     )
 
-    def __str__(self):
-        return self.name
+    # def __str__(self):
+    #     return self.name
 
 
 class Party(models.Model):
     name = models.CharField(
         'название группы',
-        max_length=200
+        max_length=200,
+        null=True,
+        blank=True
     )
     players = models.ManyToManyField(
         Person,
@@ -84,7 +88,9 @@ class Party(models.Model):
 class Message(models.Model):
     name = models.CharField(
         'название окна',
-        max_length=200
+        max_length=200,
+        null=True,
+        blank=True
     )
     text = models.TextField(
         'текст окна',
@@ -100,11 +106,12 @@ class Answer(models.Model):
     text = models.TextField(
         verbose_name='текст ответа'
     )
-    message = models.OneToOneField(
+    message = models.ForeignKey(
         Message,
         verbose_name='связь с окном',
         null=True, blank=True,
-        on_delete=models.CASCADE
+        on_delete=models.CASCADE,
+        related_name='answers'
     )
     person = models.ForeignKey(
         Person,
