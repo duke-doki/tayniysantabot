@@ -9,16 +9,9 @@ django.setup()
 from santa.models import Message
 from organizer import create_group
 from player import register_in_group
-import telegram
-from dotenv import load_dotenv
 
 
 if __name__ == '__main__':
-    # load_dotenv()
-    # telegram_token = os.environ['TELEGRAM_TOKEN']
-    # bot = telegram.Bot(token=telegram_token)
-    # updates = bot.get_updates()
-    # print(updates[0])
     messages = Message.objects.all()
 
     while True:
