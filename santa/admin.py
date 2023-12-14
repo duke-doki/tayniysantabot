@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from santa.models import Person, Party, Message, Answer
+from santa.models import Person, Party, Message, Answer, AllowedIdentifier
 
 
 @admin.register(Person)
@@ -22,3 +22,7 @@ class MessageAdmin(admin.ModelAdmin):
 class AnswerAdmin(admin.ModelAdmin):
     list_display = ('text', )
 
+
+@admin.register(AllowedIdentifier)
+class AllowedIdentifierAdmin(admin.ModelAdmin):
+    list_display = ('username', )

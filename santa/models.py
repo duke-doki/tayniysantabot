@@ -8,26 +8,15 @@ class Person(models.Model):
         null=True,
         blank=True
     )
-    phonenumber = models.CharField(
-        'номер персоны',
-        max_length=20,
-        null=True,
-        blank=True
-    )
     email = models.CharField(
         'email персоны',
         max_length=200,
         null=True,
         blank=True
     )
-    address = models.CharField(
-        'адрес персоны',
-        max_length=100,
-        null=True,
-        blank=True
-    )
-    chat_id = models.IntegerField(
-        'id персоны',
+    username = models.CharField(
+        'username персоны',
+        max_length=50,
         null=True,
         blank=True
     )
@@ -47,8 +36,8 @@ class Person(models.Model):
         blank=True
     )
 
-    # def __str__(self):
-    #     return self.name
+    def __str__(self):
+        return self.username
 
 
 class Party(models.Model):
@@ -120,6 +109,25 @@ class Answer(models.Model):
         on_delete=models.CASCADE,
         related_name='answers'
     )
+    party = models.ForeignKey(
+        Party,
+        verbose_name='В какой игре',
+        blank=True, null=True,
+        on_delete=models.CASCADE,
+        related_name='answers'
+    )
 
     def __str__(self):
         return f'Ответ {self.pk}'
+
+
+class AllowedIdentifier(models.Model):
+    username = models.CharField(
+        'username пользователя',
+        max_length=50,
+        null=True,
+        blank=True
+    )
+
+    def __str__(self):
+        return self.username
