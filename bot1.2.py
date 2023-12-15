@@ -1,3 +1,4 @@
+from environs import Env
 from telegram import Update, ReplyKeyboardMarkup, ReplyKeyboardRemove
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext, ConversationHandler
 from uuid import uuid4
@@ -124,9 +125,11 @@ def create_game(update: Update, context: CallbackContext) -> int:
 
 
 def main() -> None:
-    
-    TELEGRAM_TOKEN = '6734508688:AAHNZ7fxKlUdMR05n3M_DIMY8Tb5pOss_vI'
+    env = Env()
+    env.read_env()
 
+    TELEGRAM_TOKEN = env('TELEGRAM_TOKEN')
+    
     updater = Updater(TELEGRAM_TOKEN, use_context=True)
     dispatcher = updater.dispatcher
 
