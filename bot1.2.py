@@ -6,7 +6,7 @@ from uuid import uuid4
 game_storage = {}
 
 
-TITLE, PRICE_LIMIT, PRICE_RANGE, REGISTRATION_PERIOD, CREATE_GAME = range(5)
+SET_TITLE, SET_PRICE_LIMIT, SET_PRICE_RANGE, SET_REGISTRATION_PERIOD, CREATE_GAME = range(5)
 
 
 def start(update: Update, context: CallbackContext) -> int:
@@ -19,9 +19,9 @@ def start(update: Update, context: CallbackContext) -> int:
             price_limit = game_info.get('price_range')
             registration_period = game_info.get('registration_period')
             update.message.reply_text(
-                f"Замечательно, ты собираешься участвовать в игре:{name},\n"
-                f"ограничение стоимости подарка: {price_limit},\n "
-                f"период регистрации для участия: {registration_period}."
+                f"Замечательно, ты собираешься участвовать в игре: {name},\n"
+                f"ограничение стоимости подарка:\n{price_limit},\n"
+                f"период регистрации для участия:\n{registration_period}."
             )
         else:
             update.message.reply_text("Извините, эта игра не существует или ссылка недействительна")
@@ -33,43 +33,60 @@ def start(update: Update, context: CallbackContext) -> int:
             "Организуй тайный обмен подарками, запусти праздничное настроение!",
             reply_markup=reply_markup
         )
-        return TITLE
+        return SET_TITLE
     
 
-def title(update: Update, context: CallbackContext) -> int:
+def set_title(update: Update, context: CallbackContext) -> int:
     update.message.reply_text(
         "Введите название игры:",
         reply_markup=ReplyKeyboardRemove()
     )
-    return PRICE_LIMIT
+    return SET_PRICE_LIMIT
 
 
-def price_limit(update: Update, context: CallbackContext) -> int:
+def set_price_limit(update: Update, context: CallbackContext) -> int:
     context.user_data['title'] = update.message.text
+
     keyboard = [["Да", "Нет"]]
     reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
     update.message.reply_text(
         "Ограничим стоимость подарка?",
         reply_markup=reply_markup
     )
-    return PRICE_RANGE
+    return SET_PRICE_RANGE
 
 
-def price_range(update: Update, context: CallbackContext) -> int:
+def set_price_range(update: Update, context: CallbackContext) -> int:
     if update.message.text == "Да":
-        keyboard = [["до 500 рублей", "500-1000 рублей", "1000-2000 рублей"]]
+        keyboard = [["до 500 рублей", "от 500 до 1000 рублей", "от 1000 до 2000 рублей"]]
         reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
         update.message.reply_text(
             "Выберите ценовой диапазон:",
             reply_markup=reply_markup
         )
-        return REGISTRATION_PERIOD
+
+        return SET_REGISTRATION_PERIOD
+    
     else:
-        context.user_data['price_range'] = "Лимит не установлен"
-        return registration_period(update, context)
+        return ask_for_registration_period(update, context)
+    
 
+def ask_for_registration_period(update: Update, context: CallbackContext) -> int:
+    context.user_data['price_range'] = "без ограничений"
 
-def registration_period(update: Update, context: CallbackContext) -> int:
+    keyboard = [["до 25.12.2021 12:00", "до 31.12.2021 12:00"]]
+    reply_markup = ReplyKeyboardMarkup(keyboard, one_time_keyboard=True, resize_keyboard=True)
+    update.message.reply_text(
+        "Выберите период регистрации участников:",
+        reply_markup=reply_markup
+    )
+    return CREATE_GAME
+    
+    
+
+def set_registration_period(update: Update, context: CallbackContext) -> int:
+    context.user_data['price_range'] = update.message.text
+
     keyboard = [["до 25.12.2021 12:00", "до 31.12.2021 12:00"]]
     reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
     update.message.reply_text(
@@ -116,10 +133,10 @@ def main() -> None:
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler('start', start)],
         states={
-            TITLE: [MessageHandler(Filters.text & ~Filters.command, title)],
-            PRICE_LIMIT: [MessageHandler(Filters.text & ~Filters.command, price_limit)],
-            PRICE_RANGE: [MessageHandler(Filters.text & ~Filters.command, price_range)],
-            REGISTRATION_PERIOD: [MessageHandler(Filters.text & ~Filters.command, registration_period)],
+            SET_TITLE: [MessageHandler(Filters.text & ~Filters.command, set_title)],
+            SET_PRICE_LIMIT: [MessageHandler(Filters.text & ~Filters.command, set_price_limit)],
+            SET_PRICE_RANGE: [MessageHandler(Filters.text & ~Filters.command, set_price_range)],
+            SET_REGISTRATION_PERIOD: [MessageHandler(Filters.text & ~Filters.command, set_registration_period)],
             CREATE_GAME: [MessageHandler(Filters.text & ~Filters.command, create_game)],
         },
         fallbacks=[]
