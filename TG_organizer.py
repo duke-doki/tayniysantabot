@@ -23,6 +23,7 @@ logger = logging.getLogger(__name__)
 
 
 def intro(update, context):
+    # здесь надо чтобы бот сам определил ник пишущего
     username = 'duke_du_ke'
     context.user_data['username'] = username
     # сверяем с доступными id
@@ -174,32 +175,25 @@ def create_group():
         states={
             GREETING: [
                 MessageHandler(Filters.regex('^старт$') & ~Filters.command, greeting),
-                MessageHandler(Filters.all & ~Filters.command, fallback)
             ],
             CREATE_GAME: [
                 MessageHandler(Filters.regex('^создать игру$') & ~Filters.command, create_game),
-                MessageHandler(Filters.all & ~Filters.command, fallback)
             ],
             PRICE_LIMIT: [
                 MessageHandler(Filters.text & ~Filters.command, price_limit),
-                MessageHandler(Filters.all & ~Filters.command, fallback)
             ],
             PRICE: [
                 MessageHandler(Filters.text & ~Filters.command, price),
-                MessageHandler(Filters.all & ~Filters.command, fallback)
             ],
             PRICE_LIMIT_IF_YES: [
                 MessageHandler(Filters.text & ~Filters.command, price_limit_if_yes),
-                MessageHandler(Filters.all & ~Filters.command, fallback)
             ],
             REGISTRATION_END_DATE: [
                 # Тут надо пофиксить regex для даты
                 MessageHandler(Filters.regex(r'\d{2}.\d{2}.\d{4} \d{2}:\d{2}') & ~Filters.command, registration_end_date),
-                MessageHandler(Filters.all & ~Filters.command, fallback)
             ],
             GIFT_SENDING_DATE: [
                 MessageHandler(Filters.regex(r'\d{2}.\d{2}.\d{4} \d{2}:\d{2}') & ~Filters.command, gift_sending_date),
-                MessageHandler(Filters.all & ~Filters.command, fallback)
             ],
         },
         fallbacks=[MessageHandler(Filters.all, fallback)]
