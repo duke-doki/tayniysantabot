@@ -42,13 +42,10 @@ def button(update, context) -> None:
     option = query.data
     if option == 'organizer':
         message_text = "Вы Организатор."
-        response = create_group(messages)
-        if response == 'not allowed':
-            # поменять принт на отправку сообщения ботом
-            print('У вас нет доступа.')
+        create_group()
     elif option == 'player':
         message_text = "Вы Игрок."
-        response = register_in_group(messages)
+        response = register_in_group()
         if response == 'does not exist':
             # поменять принт на отправку сообщения ботом
             print('Такой группы не существует')
