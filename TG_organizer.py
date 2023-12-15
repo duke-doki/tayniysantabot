@@ -188,6 +188,10 @@ def create_group():
                 MessageHandler(Filters.text & ~Filters.command, price),
                 MessageHandler(Filters.all & ~Filters.command, fallback)
             ],
+            PRICE_LIMIT_IF_YES: [
+                MessageHandler(Filters.text & ~Filters.command, price_limit_if_yes),
+                MessageHandler(Filters.all & ~Filters.command, fallback)
+            ],
             REGISTRATION_END_DATE: [
                 # Тут надо пофиксить regex для даты
                 MessageHandler(Filters.regex(r'\d{2}.\d{2}.\d{4} \d{2}:\d{2}') & ~Filters.command, registration_end_date),
