@@ -2,96 +2,182 @@ import os
 import pyinputplus as pyip
 import django
 import re
+import logging
+from time import sleep
+
+from environs import Env
+from telegram.ext import MessageHandler, Updater, Filters, ConversationHandler
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'tayniysantabot.settings')
 django.setup()
 
-from santa.models import Party, Answer, Person
+from santa.models import Party, Answer, Person, Message
+
+logging.basicConfig(
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO
+)
+logger = logging.getLogger(__name__)
+
+ASK_NAME, ASK_EMAIL, WISHLIST, LETTER = range(4)
 
 
-def register_in_group(messages):
-    # поменять так, чтобы бот принимал написанное юзером и присваивал это
-    # group
-    group_and_id = pyip.inputStr(
-        prompt='Введите название группы \n'
-    )
-    match = re.match(r'(\w+)\s+(\d+)', group_and_id)
-    if match:
-        group = match.group(1)
-        id = match.group(2)
-    else:
-        return 'does not exist'
-    # проверяем существование группы
-    existing_groups = [
-        existing.name for existing in Party.objects.all()
-    ]
-    if group not in existing_groups:
-        return 'does not exist'
+def intro(update, context):
+        # сюда попадаем по ссылке и берем из нее имя и id группы
+        group = 'Карлы'
+        id = 28
+        group_here = Party.objects.get(name=group, id=id)
+        context.user_data['group_name'] = group
+        context.user_data['group_id'] = id
+        username = 'duke_du_ke'
+        context.user_data['username'] = username
+        player, is_found = Person.objects.get_or_create(username=username)
+        player.is_player = True
+        player.save()
 
-    group_here = Party.objects.get(name=group, id=id)
-
-    # Поменять так, чтобы бот спросил юзернейм и присвоил username написанное
-    username = pyip.inputStr(
-        prompt='Введите свой username (бот возьмет автоматически потом) \n'
-    )
-    player, is_found = Person.objects.get_or_create(username=username)
-    player.is_player = True
-    player.save()
-
-
-    # окно <Message: Интро игроку>
-    print(messages.get(name='Интро игроку').text)
-    # поменять принты на отправку сообщения ботом
-    print(
         f'название: {group_here.name}, '
         f'ограничение стоимости подарка: {group_here.cost_limit}, '
         f'период регистрации: {group_here.end_of_registration}, '
         f'дата отправки подарков: {group_here.gift_sending} '
-    )
 
-    # окно <Message: Запрос имени>
-    print(messages.get(name='Запрос имени').text)
-    # поменять так, чтобы написанное присваивалось player_name
-    player_name = pyip.inputStr()
+
+        intro_text = (
+                Message.objects.get(name='Интро игроку').text
+                + '\n'
+                + f"\nназвание: {group_here.name}\n"
+                + f"\nограничение стоимости подарка: {group_here.cost_limit}\n"
+                + f"\nпериод регистрации: {group_here.end_of_registration}\n"
+                + f"\nдата отправки подарков: {group_here.gift_sending}\n"
+        )
+        # сначала интро
+        update.message.reply_text(
+            intro_text
+        )
+        # потом просим имя
+        sleep(1)
+        update.message.reply_text(
+            Message.objects.get(name='Запрос имени').text
+        )
+        return ASK_NAME
+
+
+def ask_name(update, context):
+    player_name = update.message.text
+    player = Person.objects.get(username=context.user_data['username'])
     player.name = player_name
-
-    # окно <Message: Запрос адреса>
-    print(messages.get(name='Запрос адреса').text)
-    # поменять так, чтобы написанное присваивалось player_email
-    player_email = pyip.inputStr()
-    player.email = player_email
-
     player.save()
 
-    # окно <Message: Вишлист>
-    print(messages.get(name='Вишлист').text)
-    # поменять так, чтобы написанное присваивалось wishlist
-    wishlist = pyip.inputStr()
-    wishlist_answer = Answer.objects.create(text=wishlist)
-    wishlist_answer.message = messages.get(name='Вишлист')
-    wishlist_answer.person = player
-    wishlist_answer.party = group_here
+    update.message.reply_text(
+        Message.objects.get(name='Запрос адреса').text
+    )
+    return ASK_EMAIL
 
-    wishlist_answer.save()
 
-    # окно <Message: Письмо санте>
-    print(messages.get(name='Письмо санте').text)
-    # поменять так, чтобы написанное присваивалось letter_to_santa
-    letter_to_santa = pyip.inputStr()
+def ask_email(update, context):
+    player_email = update.message.text
+    player = Person.objects.get(username=context.user_data['username'])
+    player.email = player_email
+    player.save()
+
+    update.message.reply_text(
+        Message.objects.get(name='Вишлист').text
+    )
+    return WISHLIST
+
+
+def wishlist(update, context):
+    wishlist = update.message.text
+    wishlist = Answer.objects.create(text=wishlist)
+    wishlist.message = Message.objects.get(name='Вишлист')
+
+    player = Person.objects.get(username=context.user_data['username'])
+    group_here = Party.objects.get(
+        name=context.user_data['group_name'],
+        id=context.user_data['group_id']
+    )
+    wishlist.person = player
+    wishlist.party = group_here
+
+    wishlist.save()
+
+    update.message.reply_text(
+        Message.objects.get(name='Письмо санте').text
+    )
+    return LETTER
+
+
+def letter(update, context):
+    letter_to_santa = update.message.text
     letter_to_santa = Answer.objects.create(text=letter_to_santa)
-    letter_to_santa.message = messages.get(name='Письмо санте')
+    letter_to_santa.message = Message.objects.get(name='Вишлист')
+
+    player = Person.objects.get(username=context.user_data['username'])
+    group_here = Party.objects.get(
+        name=context.user_data['group_name'],
+        id=context.user_data['group_id']
+    )
     letter_to_santa.person = player
     letter_to_santa.party = group_here
 
     letter_to_santa.save()
 
-    # окно <Message: Подтверждение регистрации игрока>
-    print(messages.get(name='Подтверждение регистрации игрока').text)
+    # осталось добавить юзера в группу
     group_here.players.add(player)
 
+    text = (
+        Message.objects.get(name='Подтверждение регистрации игрока').text
+        + '\n'
+        + f'\nДень: {group_here.end_of_registration}\n'
+        + f'\nА в это число дарим подарки: {group_here.gift_sending}\n'
+    )
+    update.message.reply_text(
+        text
+    )
+    return ConversationHandler.END
 
-def find_winner(messages):
-    # окно <Message: Победитель>
-    print(messages.get(name='Победитель').text)
-    # выводится 'Жеребьевка в игре “Тайный Санта” проведена! Спешу сообщить
-    # кто тебе выпал (инфа о победителе)'
+
+# def winner(update, context):
+#     # а вот это долно отправить победителя в указанную дату, скорее всего придется
+#     # удалить и делать через send_message
+#     update.message.reply_text(
+#         Message.objects.get(name='Победитель').text
+#     )
+
+
+def fallback(update, context):
+    update.message.reply_text(
+        'Извините, я вас не понял'
+    )
+
+
+def register_in_group():
+    env = Env()
+    env.read_env()
+    telegram_token = env.str('TELEGRAM_TOKEN')
+
+    conv_handler = ConversationHandler(
+        entry_points=[MessageHandler(Filters.text, intro)],
+        states={
+            ASK_NAME: [
+                MessageHandler(Filters.text & ~Filters.command, ask_name),
+            ],
+            ASK_EMAIL: [
+                MessageHandler(Filters.text & ~Filters.command, ask_email),
+            ],
+            WISHLIST: [
+                MessageHandler(Filters.text & ~Filters.command, wishlist),
+            ],
+            LETTER: [
+                MessageHandler(Filters.text & ~Filters.command, letter),
+            ],
+        },
+        fallbacks=[MessageHandler(Filters.all, fallback)]
+    )
+
+    updater = Updater(token=telegram_token)
+
+    updater.dispatcher.add_handler(conv_handler)
+    updater.start_polling()
+
+
+if __name__ == '__main__':
+    register_in_group()
