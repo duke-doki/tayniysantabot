@@ -42,4 +42,3 @@ if __name__ == '__main__':
             noVal='нет')
         if answer == 'нет':
             break
-
