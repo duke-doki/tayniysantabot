@@ -1,5 +1,5 @@
 import os
-import pyinputplus as pyip
+
 import django
 import re
 import logging
@@ -23,21 +23,14 @@ ASK_NAME, ASK_EMAIL, WISHLIST, LETTER = range(4)
 
 def intro(update, context):
         # сюда попадаем по ссылке и берем из нее id группы
-        id = 29
+        id = 30
         group_here = Party.objects.get(id=id)
-        context.user_data['group_name'] = group_here.name
         context.user_data['group_id'] = id
-        username = 'duke_du_ke'
+        username = update.message.from_user.username
         context.user_data['username'] = username
         player, is_found = Person.objects.get_or_create(username=username)
         player.is_player = True
         player.save()
-
-        f'название: {group_here.name}, '
-        f'ограничение стоимости подарка: {group_here.cost_limit}, '
-        f'период регистрации: {group_here.end_of_registration}, '
-        f'дата отправки подарков: {group_here.gift_sending} '
-
 
         intro_text = (
                 Message.objects.get(name='Интро игроку').text
@@ -47,12 +40,11 @@ def intro(update, context):
                 + f"\nпериод регистрации: {group_here.end_of_registration}\n"
                 + f"\nдата отправки подарков: {group_here.gift_sending}\n"
         )
-        # сначала интро
         update.message.reply_text(
             intro_text
         )
-        # потом просим имя
-        sleep(1)
+        sleep(2)
+
         update.message.reply_text(
             Message.objects.get(name='Запрос имени').text
         )
@@ -89,13 +81,9 @@ def wishlist(update, context):
     wishlist.message = Message.objects.get(name='Вишлист')
 
     player = Person.objects.get(username=context.user_data['username'])
-    group_here = Party.objects.get(
-        name=context.user_data['group_name'],
-        id=context.user_data['group_id']
-    )
+    group_here = Party.objects.get(id=context.user_data['group_id'])
     wishlist.person = player
     wishlist.party = group_here
-
     wishlist.save()
 
     update.message.reply_text(
@@ -110,16 +98,11 @@ def letter(update, context):
     letter_to_santa.message = Message.objects.get(name='Вишлист')
 
     player = Person.objects.get(username=context.user_data['username'])
-    group_here = Party.objects.get(
-        name=context.user_data['group_name'],
-        id=context.user_data['group_id']
-    )
+    group_here = Party.objects.get(id=context.user_data['group_id'])
     letter_to_santa.person = player
     letter_to_santa.party = group_here
-
     letter_to_santa.save()
 
-    # осталось добавить юзера в группу
     group_here.players.add(player)
 
     text = (
@@ -132,14 +115,6 @@ def letter(update, context):
         text
     )
     return ConversationHandler.END
-
-
-# def winner(update, context):
-#     # а вот это долно отправить победителя в указанную дату, скорее всего придется
-#     # удалить и делать через send_message
-#     update.message.reply_text(
-#         Message.objects.get(name='Победитель').text
-#     )
 
 
 def fallback(update, context):
