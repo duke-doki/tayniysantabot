@@ -1,4 +1,6 @@
 Django~=5.0
-PyInputPlus~=0.2.12
-python-dotenv~=1.0.0
+
+
 python-telegram-bot==13.*
+
+environs~=9.5.0
