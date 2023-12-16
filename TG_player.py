@@ -1,7 +1,7 @@
 import os
-import datetime
+
 import django
-import re
+
 import logging
 from time import sleep
 

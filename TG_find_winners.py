@@ -1,7 +1,7 @@
 import os
 import datetime
 import random
-import time
+
 import django
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'tayniysantabot.settings')

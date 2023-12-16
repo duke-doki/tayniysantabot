@@ -1,9 +1,9 @@
 import os
 
 import django
-from environs import Env
-from telegram import ReplyKeyboardMarkup, update
-from telegram.ext import Updater, MessageHandler, Filters, ConversationHandler
+
+from telegram import ReplyKeyboardMarkup
+from telegram.ext import MessageHandler, Filters, ConversationHandler
 import logging
 from datetime import datetime
 

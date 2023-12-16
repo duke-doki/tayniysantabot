@@ -1,9 +1,8 @@
 import os
-import time
+
 import django
 import logging
-import datetime
-import random
+
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'tayniysantabot.settings')
 django.setup()
