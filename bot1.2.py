@@ -1,7 +1,7 @@
 from environs import Env
 from telegram import Update, ReplyKeyboardMarkup, ReplyKeyboardRemove
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext, ConversationHandler
-from uuid import uuid4
+from urllib.parse import urlencode, urlunparse
 
 
 game_storage = {}
@@ -97,10 +97,19 @@ def set_registration_period(update: Update, context: CallbackContext) -> int:
     return CREATE_GAME
 
 
+def create_invitation_link(bot_username, game_id):
+    base_url = "t.me"
+    path = f"/{bot_username}"
+    query_params = {"start": game_id}
+    query_string = urlencode(query_params)
+    return urlunparse(('https', base_url, path, '', query_string, ''))
+
+
 def create_game(update: Update, context: CallbackContext) -> int:
     context.user_data['registration_period'] = update.message.text
 
     game_id = str(uuid4())
+    
     context.user_data['game_id'] = game_id
 
     game_storage[game_id] = {

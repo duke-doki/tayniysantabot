@@ -1,12 +1,11 @@
 import os
-import pyinputplus as pyip
 import django
+from urllib.parse import urlencode, urlunparse
 from environs import Env
-from telegram import ReplyKeyboardMarkup, update
-from telegram.ext import Updater, MessageHandler, Filters, ConversationHandler
+from telegram import ReplyKeyboardMarkup
+from telegram.ext import MessageHandler, Filters, ConversationHandler
 import logging
 from datetime import datetime
-from urllib.parse import urlencode, urlunparse
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'tayniysantabot.settings')
 django.setup()
@@ -25,7 +24,8 @@ logger = logging.getLogger(__name__)
 
 def intro(update, context):
     # здесь надо чтобы бот сам определил ник пишущего
-    username = 'duke_du_ke'
+    username = update.message.from_user.username
+    chat_id = update.message.chat_id
     context.user_data['username'] = username
     # сверяем с доступными id
     allowed_usernames = [
@@ -35,7 +35,7 @@ def intro(update, context):
     if username in allowed_usernames:
         # создаем нового пользователя или берем, если уже создавали
         organizer, is_found = Person.objects.get_or_create(
-            username=username, is_organizer=True
+            username=username, chat_id=chat_id, is_organizer=True
         )
 
         reply_keyboard = [['старт', ]]
@@ -43,15 +43,22 @@ def intro(update, context):
             Message.objects.get(name='Интро организатору').text,
             reply_markup=ReplyKeyboardMarkup(
                 reply_keyboard,
-                one_time_keyboard=True
+                resize_keyboard=True
             )
         )
         return GREETING
 
 
 def greeting(update, context):
+
+    reply_keyboard = [['создать игру', ]]
+
     update.message.reply_text(
-        Message.objects.get(name='Приветствие').text
+        Message.objects.get(name='Приветствие').text,
+        rreply_markup=ReplyKeyboardMarkup(
+                reply_keyboard,
+                resize_keyboard=True
+            )
     )
     return CREATE_GAME
 
@@ -114,7 +121,6 @@ def price(update, context):
 
 def price_limit_if_yes(update, context):
     new_party = Party.objects.get(
-        name=context.user_data['group_name'],
         id=int(context.user_data['group_id'])
     )
     cost_limit = update.message.text
@@ -131,7 +137,6 @@ def registration_end_date(update, context):
     end_of_registration = context.user_data['registration_end_date']
     end_of_registration = datetime.strptime(end_of_registration, '%d.%m.%Y %H:%M')
     new_party = Party.objects.get(
-        name=context.user_data['group_name'],
         id=int(context.user_data['group_id'])
     )
 
@@ -188,10 +193,7 @@ def fallback(update, context):
     )
 
 
-def create_group():
-    env = Env()
-    env.read_env()
-    telegram_token = env.str('TELEGRAM_TOKEN')
+def create_group(updater):
 
     conv_handler = ConversationHandler(
         entry_points=[MessageHandler(Filters.text, intro)],
@@ -222,11 +224,4 @@ def create_group():
         fallbacks=[MessageHandler(Filters.all, fallback)]
     )
 
-    updater = Updater(token=telegram_token)
-
     updater.dispatcher.add_handler(conv_handler)
-    updater.start_polling()
-
-
-if __name__ == '__main__':
-    create_group()
