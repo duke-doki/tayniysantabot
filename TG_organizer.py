@@ -25,6 +25,7 @@ logger = logging.getLogger(__name__)
 def intro(update, context):
     # здесь надо чтобы бот сам определил ник пишущего
     username = update.message.from_user.username
+    chat_id = update.message.chat_id
     context.user_data['username'] = username
     # сверяем с доступными id
     allowed_usernames = [
@@ -34,7 +35,7 @@ def intro(update, context):
     if username in allowed_usernames:
         # создаем нового пользователя или берем, если уже создавали
         organizer, is_found = Person.objects.get_or_create(
-            username=username, is_organizer=True
+            username=username, chat_id=chat_id, is_organizer=True
         )
 
         reply_keyboard = [['старт', ]]
@@ -162,10 +163,7 @@ def fallback(update, context):
     )
 
 
-def create_group():
-    env = Env()
-    env.read_env()
-    telegram_token = env.str('TELEGRAM_TOKEN')
+def create_group(updater):
 
     conv_handler = ConversationHandler(
         entry_points=[MessageHandler(Filters.text, intro)],
@@ -196,10 +194,4 @@ def create_group():
         fallbacks=[MessageHandler(Filters.all, fallback)]
     )
 
-    updater = Updater(token=telegram_token)
     updater.dispatcher.add_handler(conv_handler)
-    updater.start_polling()
-
-
-if __name__ == '__main__':
-    create_group()

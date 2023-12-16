@@ -1,5 +1,5 @@
 import os
-
+import datetime
 import django
 import re
 import logging
@@ -11,7 +11,7 @@ from telegram.ext import MessageHandler, Updater, Filters, ConversationHandler
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'tayniysantabot.settings')
 django.setup()
 
-from santa.models import Party, Answer, Person, Message
+from santa.models import Party, Answer, Person, Message, Winner
 
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO
@@ -23,12 +23,13 @@ ASK_NAME, ASK_EMAIL, WISHLIST, LETTER = range(4)
 
 def intro(update, context):
         # сюда попадаем по ссылке и берем из нее id группы
-        id = 30
+        id = 32
         group_here = Party.objects.get(id=id)
         context.user_data['group_id'] = id
         username = update.message.from_user.username
+        chat_id = update.message.chat_id
         context.user_data['username'] = username
-        player, is_found = Person.objects.get_or_create(username=username)
+        player, is_found = Person.objects.get_or_create(username=username, chat_id=chat_id)
         player.is_player = True
         player.save()
 
@@ -114,6 +115,7 @@ def letter(update, context):
     update.message.reply_text(
         text
     )
+
     return ConversationHandler.END
 
 
@@ -123,10 +125,7 @@ def fallback(update, context):
     )
 
 
-def register_in_group():
-    env = Env()
-    env.read_env()
-    telegram_token = env.str('TELEGRAM_TOKEN')
+def register_in_group(updater):
 
     conv_handler = ConversationHandler(
         entry_points=[MessageHandler(Filters.text, intro)],
@@ -147,11 +146,4 @@ def register_in_group():
         fallbacks=[MessageHandler(Filters.all, fallback)]
     )
 
-    updater = Updater(token=telegram_token)
-
     updater.dispatcher.add_handler(conv_handler)
-    updater.start_polling()
-
-
-if __name__ == '__main__':
-    register_in_group()

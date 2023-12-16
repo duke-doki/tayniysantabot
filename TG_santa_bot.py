@@ -1,13 +1,14 @@
-
 import os
-import pyinputplus as pyip
+import time
 import django
 import logging
+import datetime
+import random
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'tayniysantabot.settings')
 django.setup()
 
-from santa.models import Message
+from santa.models import Message, Party, Person, Winner
 from TG_organizer import create_group
 from TG_player import register_in_group
 
@@ -16,9 +17,9 @@ from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, \
     CallbackContext, CallbackQueryHandler
 from environs import Env
 
-
 logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    level=logging.INFO
 )
 logger = logging.getLogger(__name__)
 
@@ -42,12 +43,20 @@ def button(update, context) -> None:
     option = query.data
     if option == 'organizer':
         message_text = "Вы Организатор."
-        create_group()
+        create_group(updater)
     elif option == 'player':
         message_text = "Вы Игрок."
-        register_in_group()
+        register_in_group(updater)
 
-    update.effective_chat.send_message(text=message_text)
+    query.edit_message_text(text=message_text)
+
+
+def callback_winner(context: CallbackContext):
+    if Winner.objects.count() > 0:
+        winners = Winner.objects.all()
+        for winner in winners:
+            context.bot.send_message(chat_id=winner.santa.chat_id, text=winner.text)
+            winner.delete()
 
 
 if __name__ == '__main__':
@@ -56,8 +65,10 @@ if __name__ == '__main__':
     messages = Message.objects.all()
     telegram_token = env.str('TELEGRAM_TOKEN')
 
-    updater = Updater(token=telegram_token)
+    updater = Updater(token=telegram_token, use_context=True)
     dispatcher = updater.dispatcher
+    job = updater.job_queue
+    job_second = job.run_repeating(callback_winner, interval=1, first=1)
 
     # обработчик команды /start
     start_handler = CommandHandler('start', start)
@@ -68,5 +79,4 @@ if __name__ == '__main__':
     dispatcher.add_handler(button_handler)
 
     updater.start_polling()
-
     updater.idle()

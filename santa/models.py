@@ -20,6 +20,11 @@ class Person(models.Model):
         null=True,
         blank=True
     )
+    chat_id = models.IntegerField(
+        'id персоны',
+        null=True,
+        blank=True
+    )
     is_owner = models.BooleanField(
         'Владелец',
         null=True,
@@ -131,3 +136,25 @@ class AllowedIdentifier(models.Model):
 
     def __str__(self):
         return self.username
+
+
+class Winner(models.Model):
+    text = models.TextField(
+        'текст',
+        null=True,
+        blank=True
+    )
+    santa = models.ForeignKey(
+        Person,
+        verbose_name='кому придет это сообщение',
+        blank=True, null=True,
+        on_delete=models.CASCADE,
+        related_name='winners'
+    )
+    party = models.ForeignKey(
+        Party,
+        verbose_name='В какой игре',
+        blank=True, null=True,
+        on_delete=models.CASCADE,
+        related_name='winners'
+    )

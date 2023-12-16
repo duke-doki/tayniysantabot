@@ -1,6 +1,7 @@
 from django.contrib import admin
 
-from santa.models import Person, Party, Message, Answer, AllowedIdentifier
+from santa.models import Person, Party, Message, Answer, AllowedIdentifier, \
+    Winner
 
 
 @admin.register(Person)
@@ -26,3 +27,8 @@ class AnswerAdmin(admin.ModelAdmin):
 @admin.register(AllowedIdentifier)
 class AllowedIdentifierAdmin(admin.ModelAdmin):
     list_display = ('username', )
+
+
+@admin.register(Winner)
+class WinnerAdmin(admin.ModelAdmin):
+    list_filter = ('santa', 'party', )
