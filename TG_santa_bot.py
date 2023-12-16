@@ -45,12 +45,8 @@ def button(update, context) -> None:
         create_group()
     elif option == 'player':
         message_text = "Вы Игрок."
-        response = register_in_group()
-        if response == 'does not exist':
-            # поменять принт на отправку сообщения ботом
-            print('Такой группы не существует')
+        register_in_group()
 
-    query.edit_message_text(text=message_text)
     update.effective_chat.send_message(text=message_text)
 
 

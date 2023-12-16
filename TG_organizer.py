@@ -1,5 +1,5 @@
 import os
-import pyinputplus as pyip
+
 import django
 from environs import Env
 from telegram import ReplyKeyboardMarkup, update
@@ -113,7 +113,6 @@ def price(update, context):
 
 def price_limit_if_yes(update, context):
     new_party = Party.objects.get(
-        name=context.user_data['group_name'],
         id=int(context.user_data['group_id'])
     )
     cost_limit = update.message.text
@@ -130,7 +129,6 @@ def registration_end_date(update, context):
     end_of_registration = context.user_data['registration_end_date']
     end_of_registration = datetime.strptime(end_of_registration, '%d.%m.%Y %H:%M')
     new_party = Party.objects.get(
-        name=context.user_data['group_name'],
         id=int(context.user_data['group_id'])
     )
 
@@ -147,7 +145,6 @@ def gift_sending_date(update, context):
     gift_sending = context.user_data['gift_sending_date']
     gift_sending = datetime.strptime(gift_sending, '%d.%m.%Y %H:%M')
     new_party = Party.objects.get(
-        name=context.user_data['group_name'],
         id=int(context.user_data['group_id'])
     )
 
@@ -200,7 +197,6 @@ def create_group():
     )
 
     updater = Updater(token=telegram_token)
-
     updater.dispatcher.add_handler(conv_handler)
     updater.start_polling()
 
