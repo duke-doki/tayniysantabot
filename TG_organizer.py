@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 
 def intro(update, context):
     # здесь надо чтобы бот сам определил ник пишущего
-    username = 'duke_du_ke'
+    username = update.message.from_user.username
     context.user_data['username'] = username
     # сверяем с доступными id
     allowed_usernames = [

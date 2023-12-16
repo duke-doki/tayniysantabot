@@ -22,11 +22,10 @@ ASK_NAME, ASK_EMAIL, WISHLIST, LETTER = range(4)
 
 
 def intro(update, context):
-        # сюда попадаем по ссылке и берем из нее имя и id группы
-        group = 'Карлы'
-        id = 28
-        group_here = Party.objects.get(name=group, id=id)
-        context.user_data['group_name'] = group
+        # сюда попадаем по ссылке и берем из нее id группы
+        id = 29
+        group_here = Party.objects.get(id=id)
+        context.user_data['group_name'] = group_here.name
         context.user_data['group_id'] = id
         username = 'duke_du_ke'
         context.user_data['username'] = username
