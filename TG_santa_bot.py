@@ -1,5 +1,5 @@
 import os
-
+from time import sleep
 import django
 import logging
 
@@ -25,15 +25,47 @@ logger = logging.getLogger(__name__)
 
 
 def start(update, context) -> None:
-    text = 'Вы организатор или игрок?'
-    keyboard = [
-        [
-            InlineKeyboardButton("Организатор", callback_data='organizer'),
-            InlineKeyboardButton("Игрок", callback_data='player'),
-        ],
-    ]
-    reply_markup = InlineKeyboardMarkup(keyboard)
-    update.message.reply_text(text, reply_markup=reply_markup)
+    args = context.args
+    if args:
+        group_id = args[0]
+        group_here = Party.objects.get(id=group_id)
+        username = update.effective_user.username
+        chat_id = update.effective_chat.id
+        player, is_found = Person.objects.get_or_create(
+            username=username,
+            chat_id=chat_id
+        )
+        player.is_player = True
+        player.save()
+
+        intro_text = (
+                Message.objects.get(name='Интро игроку').text
+                + '\n'
+                + f"\nназвание: {group_here.name}\n"
+                + f"\nограничение стоимости подарка: {group_here.cost_limit}\n"
+                + f"\nпериод регистрации: {group_here.end_of_registration}\n"
+                + f"\nдата отправки подарков: {group_here.gift_sending}\n"
+        )
+        context.bot.send_message(
+            chat_id=chat_id,
+            text=intro_text
+        )
+        sleep(2)
+        context.bot.send_message(
+            chat_id=chat_id,
+            text=Message.objects.get(name='Запрос имени').text
+        )
+        register_in_group(updater, group_id)
+    else:
+        text = 'Вы организатор или игрок?'
+        keyboard = [
+            [
+                InlineKeyboardButton("Организатор", callback_data='organizer'),
+                InlineKeyboardButton("Игрок", callback_data='player'),
+            ],
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        update.message.reply_text(text, reply_markup=reply_markup)
 
 
 def button(update, context) -> None:
