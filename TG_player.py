@@ -14,7 +14,8 @@ django.setup()
 from santa.models import Party, Answer, Person, Message, Winner
 
 logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    level=logging.INFO
 )
 logger = logging.getLogger(__name__)
 
@@ -22,34 +23,34 @@ ASK_NAME, ASK_EMAIL, WISHLIST, LETTER = range(4)
 
 
 def intro(update, context):
-        # сюда попадаем по ссылке и берем из нее id группы
-        id = 32
-        group_here = Party.objects.get(id=id)
-        context.user_data['group_id'] = id
-        username = update.message.from_user.username
-        chat_id = update.message.chat_id
-        context.user_data['username'] = username
-        player, is_found = Person.objects.get_or_create(username=username, chat_id=chat_id)
-        player.is_player = True
-        player.save()
+    group_id = update.message.text
+    group_here = Party.objects.get(id=group_id)
+    context.user_data['group_id'] = group_id
+    username = update.message.from_user.username
+    chat_id = update.message.chat_id
+    context.user_data['username'] = username
+    player, is_found = Person.objects.get_or_create(username=username,
+                                                    chat_id=chat_id)
+    player.is_player = True
+    player.save()
 
-        intro_text = (
-                Message.objects.get(name='Интро игроку').text
-                + '\n'
-                + f"\nназвание: {group_here.name}\n"
-                + f"\nограничение стоимости подарка: {group_here.cost_limit}\n"
-                + f"\nпериод регистрации: {group_here.end_of_registration}\n"
-                + f"\nдата отправки подарков: {group_here.gift_sending}\n"
-        )
-        update.message.reply_text(
-            intro_text
-        )
-        sleep(2)
+    intro_text = (
+            Message.objects.get(name='Интро игроку').text
+            + '\n'
+            + f"\nназвание: {group_here.name}\n"
+            + f"\nограничение стоимости подарка: {group_here.cost_limit}\n"
+            + f"\nпериод регистрации: {group_here.end_of_registration}\n"
+            + f"\nдата отправки подарков: {group_here.gift_sending}\n"
+    )
+    update.message.reply_text(
+        intro_text
+    )
+    sleep(2)
 
-        update.message.reply_text(
-            Message.objects.get(name='Запрос имени').text
-        )
-        return ASK_NAME
+    update.message.reply_text(
+        Message.objects.get(name='Запрос имени').text
+    )
+    return ASK_NAME
 
 
 def ask_name(update, context):
@@ -107,10 +108,10 @@ def letter(update, context):
     group_here.players.add(player)
 
     text = (
-        Message.objects.get(name='Подтверждение регистрации игрока').text
-        + '\n'
-        + f'\nДень: {group_here.end_of_registration}\n'
-        + f'\nА в это число дарим подарки: {group_here.gift_sending}\n'
+            Message.objects.get(name='Подтверждение регистрации игрока').text
+            + '\n'
+            + f'\nДень: {group_here.end_of_registration}\n'
+            + f'\nА в это число дарим подарки: {group_here.gift_sending}\n'
     )
     update.message.reply_text(
         text
@@ -126,9 +127,8 @@ def fallback(update, context):
 
 
 def register_in_group(updater):
-
     conv_handler = ConversationHandler(
-        entry_points=[MessageHandler(Filters.text, intro)],
+        entry_points=[MessageHandler(Filters.regex(r'\d+'), intro)],
         states={
             ASK_NAME: [
                 MessageHandler(Filters.text & ~Filters.command, ask_name),
