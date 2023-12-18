@@ -61,6 +61,8 @@ def intro(update, context):
         context.user_data['username'] = update.message.from_user.username
         player = Person.objects.get(username=context.user_data['username'])
         context.user_data['group_id'] = group_id_here
+        group_here = Party.objects.get(id=context.user_data['group_id'])
+        group_here.players.add(player)
         player.name = player_name
         player.save()
         update.message.reply_text(
