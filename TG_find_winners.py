@@ -1,7 +1,7 @@
 import os
 import datetime
 import random
-
+import time
 import django
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'tayniysantabot.settings')
@@ -44,6 +44,8 @@ def find_winners():
 
                     # Создаем виннера
                     Winner.objects.create(text=text, santa=sends_gift, party=party)
+    else:
+        time.sleep(5)
 
 
 if __name__ == '__main__':
