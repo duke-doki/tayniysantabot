@@ -14,7 +14,8 @@ django.setup()
 from santa.models import Party, Answer, Person, Message, Winner
 
 logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    level=logging.INFO
 )
 logger = logging.getLogger(__name__)
 
@@ -22,16 +23,21 @@ ASK_NAME, ASK_EMAIL, WISHLIST, LETTER = range(4)
 
 
 def intro(update, context):
-        # сюда попадаем по ссылке и берем из нее id группы
-        id = 32
-        group_here = Party.objects.get(id=id)
-        context.user_data['group_id'] = id
+    print(update.message.text)
+    print(type(update.message.text) is int)
+    if update.message.text.isdigit():
+        print('YA')
+        group_id = update.message.text
+        group_here = Party.objects.get(id=group_id)
+        context.user_data['group_id'] = group_id
         username = update.message.from_user.username
         chat_id = update.message.chat_id
         context.user_data['username'] = username
-        player, is_found = Person.objects.get_or_create(username=username, chat_id=chat_id)
+        player, is_found = Person.objects.get_or_create(username=username,
+                                                        chat_id=chat_id)
         player.is_player = True
         player.save()
+        group_here.players.add(player)
 
         intro_text = (
                 Message.objects.get(name='Интро игроку').text
@@ -50,6 +56,18 @@ def intro(update, context):
             Message.objects.get(name='Запрос имени').text
         )
         return ASK_NAME
+    else:
+        print(update.message.text)
+        player_name = update.message.text
+        context.user_data['username'] = update.message.from_user.username
+        player = Person.objects.get(username=context.user_data['username'])
+        context.user_data['group_id'] = group_id_here
+        player.name = player_name
+        player.save()
+        update.message.reply_text(
+            Message.objects.get(name='Запрос адреса').text
+        )
+        return ASK_EMAIL
 
 
 def ask_name(update, context):
@@ -104,13 +122,11 @@ def letter(update, context):
     letter_to_santa.party = group_here
     letter_to_santa.save()
 
-    group_here.players.add(player)
-
     text = (
-        Message.objects.get(name='Подтверждение регистрации игрока').text
-        + '\n'
-        + f'\nДень: {group_here.end_of_registration}\n'
-        + f'\nА в это число дарим подарки: {group_here.gift_sending}\n'
+            Message.objects.get(name='Подтверждение регистрации игрока').text
+            + '\n'
+            + f'\nДень: {group_here.end_of_registration}\n'
+            + f'\nА в это число дарим подарки: {group_here.gift_sending}\n'
     )
     update.message.reply_text(
         text
@@ -125,10 +141,9 @@ def fallback(update, context):
     )
 
 
-def register_in_group(updater):
-
+def register_in_group(updater, group_id_yes=''):
     conv_handler = ConversationHandler(
-        entry_points=[MessageHandler(Filters.text, intro)],
+        entry_points=[MessageHandler(Filters.regex(r'^\d+|\w+'), intro)],
         states={
             ASK_NAME: [
                 MessageHandler(Filters.text & ~Filters.command, ask_name),
@@ -145,5 +160,6 @@ def register_in_group(updater):
         },
         fallbacks=[MessageHandler(Filters.all, fallback)]
     )
-
+    global group_id_here
+    group_id_here = group_id_yes
     updater.dispatcher.add_handler(conv_handler)
