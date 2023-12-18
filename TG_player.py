@@ -23,10 +23,9 @@ ASK_NAME, ASK_EMAIL, WISHLIST, LETTER = range(4)
 
 
 def intro(update, context):
-    print(update.message.text)
-    print(type(update.message.text) is int)
+
     if update.message.text.isdigit():
-        print('YA')
+
         group_id = update.message.text
         group_here = Party.objects.get(id=group_id)
         context.user_data['group_id'] = group_id
@@ -57,7 +56,7 @@ def intro(update, context):
         )
         return ASK_NAME
     else:
-        print(update.message.text)
+
         player_name = update.message.text
         context.user_data['username'] = update.message.from_user.username
         player = Person.objects.get(username=context.user_data['username'])

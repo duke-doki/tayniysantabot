@@ -16,10 +16,8 @@ def find_winners():
     if parties.count() > 0:
 
         for party in parties:
+            if party.end_of_registration and (party.end_of_registration.strftime('%Y-%m-%d %H:%M:%S') == datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')) and party.winners.count() == 0:
 
-            if (party.end_of_registration.strftime('%Y-%m-%d %H:%M:%S') == datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')) and party.winners.count() == 0:
-                print('yes!')
-                # начинаем жеребьевку
                 players = [player.username for player in
                            party.players.all()]
                 random.shuffle(players)
@@ -29,8 +27,8 @@ def find_winners():
                         santas[username] = players[players.index(username) + 1]
                     else:
                         santas[username] = players[0]
-                print(santas)
-                # теперь у нас есть словарь из кто кому дарит
+
+
                 for key, value in santas.items():
                     gets_gift = Person.objects.get(username=value)
                     sends_gift = Person.objects.get(username=key)
@@ -42,7 +40,6 @@ def find_winners():
                             + f'\nemail: {gets_gift.email}\n'
                     )
 
-                    # Создаем виннера
                     Winner.objects.create(text=text, santa=sends_gift, party=party)
     else:
         time.sleep(5)
